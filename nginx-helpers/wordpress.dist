@@ -1,0 +1,47 @@
+
+server {
+	listen 80;
+	server_name www.${project_fqdn};
+	root /var/www/${project_fqdn}/public_html;
+	index index.php;
+	
+	## Global assets configuration
+	location = /favicon.ico {
+		log_not_found off;
+		access_log off;
+	}
+
+	location = /robots.txt {
+		allow all;
+		log_not_found off;
+		access_log off;
+	}
+
+	## Main site config
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+	}
+
+	## PHP interpreter setup
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		fastcgi_intercept_errors on;
+		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
+	}
+
+	## Static resources caching policy
+	location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+		expires max;
+		log_not_found off;
+	}
+
+	access_log /var/log/nginx/${project_fqdn}.access.log combined;
+	error_log /var/log/nginx/${project_fqdn}.error.log;
+
+}
+
+server {
+	listen 80;
+	server_name ${project_fqdn};
+	return 301 http://www.${project_fqdn}$request_uri;
+}
